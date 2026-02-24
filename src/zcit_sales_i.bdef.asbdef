@@ -1,0 +1,115 @@
+//unmanaged implementation in class zbp_cit_sales_i unique;
+//strict ( 2 );
+//
+//define behavior for ZCIT_SALES_I //alias <alias_name>
+////late numbering
+//lock master
+//authorization master ( instance )
+////etag master <field_name>
+//{
+//  create ( authorization : global );
+//  update;
+//  delete;
+//  field ( readonly ) SalesDocument;
+//  association _salesitem { create; }
+//}
+//
+//define behavior for ZCIT_SALES_O //alias <alias_name>
+////late numbering
+//lock dependent by _salesHeader
+//authorization dependent by _salesHeader
+////etag master <field_name>
+//{
+//  update;
+//  delete;
+//  field ( readonly ) SalesDocument, SalesItemnumber;
+//  association _salesHeader;
+//}
+
+unmanaged implementation in class zbp_cit_saver_22cs083 unique;
+strict ( 2 );
+with draft;
+
+define behavior for ZCIT_SALES_I alias SalesOrderHdr
+implementation in class zbp_cit_hdr_22cs083 unique
+draft table zcit_hdr_d
+lock master total etag LocalLastChangedAt
+authorization master ( instance )
+etag master LocalLastChangedAt
+{
+  create ( authorization : global );
+  update;
+  delete;
+
+  draft action Edit;
+  draft action Resume;
+  draft determine action Prepare;
+  draft action Activate optimized;
+  draft action Discard;
+
+  /* --- NEW ACTIONS --- */
+  action ( features : instance ) uploadExcelData result [1] $self;
+  action ( features : instance ) downloadTemplate result [1] $self;
+  /* ------------------- */
+
+  field ( mandatory : create ) SalesDocument;
+  field ( readonly : update ) SalesDocument;
+  field ( readonly ) LocalLastChangedAt, LocalCreatedAt, LocalCreatedBy, LocalLastChangedBy;
+
+  association _salesitem { create; with draft; }
+
+  mapping for ZCIT_HEADER
+  {
+    SalesDocument       = salesdocument;
+    SalesDocumentType   = salesdocumenttype;
+    OrderReason         = orderreason;
+    SalesOrganization   = salesorganization;
+    DistributionChannel = distributionchannel;
+    Division            = division;
+    SalesOffice         = salesoffice;
+    SalesGroup          = salesgroup;
+    NetPrice            = netprice;
+    Currency            = currency;
+
+    /* --- NEW MAPPING --- */
+    Attachment          = attachment;
+    MimeType            = mimetype;
+    Filename            = filename;
+    /* ------------------- */
+
+    LocalCreatedBy      = local_created_by;
+    LocalCreatedAt      = local_created_at;
+    LocalLastChangedBy  = local_last_changed_by;
+    LocalLastChangedAt  = local_last_changed_at;
+  }
+}
+
+define behavior for ZCIT_SALES_O alias SalesOrderItm
+implementation in class zbp_cit_itm_22cs083 unique
+draft table zcit_itm_d
+lock dependent by _salesHeader
+authorization dependent by _salesHeader
+etag master LocalLastChangedAt
+{
+  update;
+  delete;
+  field ( readonly : update, mandatory : create ) SalesItemnumber;
+  field ( readonly ) SalesDocument, LocalLastChangedAt, LocalCreatedAt, LocalCreatedBy, LocalLastChangedBy;
+  association _salesHeader { with draft; }
+
+  mapping for ZCIT_ITM
+  {
+    SalesDocument       = salesdocument;
+    SalesItemnumber     = salesitemnumber;
+    Material            = material;
+    Plant               = plant;
+    Quantity            = quantity;
+    Quantityunits       = quantityunits;
+    NetPrice            = netprice;
+    Currency            = currency;
+    LocalCreatedBy      = local_created_by;
+    LocalCreatedAt      = local_created_at;
+    LocalLastChangedBy  = local_last_changed_by;
+    LocalLastChangedAt  = local_last_changed_at;
+  }
+}

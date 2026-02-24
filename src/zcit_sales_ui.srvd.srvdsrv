@@ -1,0 +1,5 @@
+@EndUserText.label: 'Sales Service Definition'
+define service ZCIT_SALES_UI {
+  expose ZCIT_SALES_C;
+  expose ZCIT_SALES_OC;
+}
